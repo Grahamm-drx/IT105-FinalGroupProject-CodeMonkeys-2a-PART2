@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add/Update Record - Student Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .form-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab-button {
+            padding: 10px 15px;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            margin-bottom: -2px;
+        }
+        
+        .tab-button.active {
+            background: #007bff;
+            color: white;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        .form-section {
+            display: none;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        .form-section h3 {
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <h2>Student Management System - Records</h2>
+    <a href="dashboard.php">← Back to Dashboard</a>
+
+    <!-- Tab Navigation -->
+    <div class="form-tabs">
+        <button class="tab-button active" onclick="showTab('student')">Add Student</button>
+        <button class="tab-button" onclick="showTab('instructor')">Add Instructor</button>
+        <button class="tab-button" onclick="showTab('course')">Add Course</button>
+        <button class="tab-button" onclick="showTab('enrollment')">Add Enrollment</button>
+    </div>
+
+    <!-- Add Student Form -->
+    <div id="student" class="form-section active">
+        <h3>Add New Student</h3>
+        <form action="../backend/insert.php" method="post">
+            <input type="hidden" name="table" value="students">
+            
+            <div class="form-group">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" name="firstName" placeholder="John" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" name="lastName" placeholder="Smith" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="john@university.edu" required>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit">Add Student</button>
+                <button type="reset">Clear</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Add Instructor Form -->
+    <div id="instructor" class="form-section">
+        <h3>Add New Instructor</h3>
+        <form action="../backend/insert.php" method="post">
+            <input type="hidden" name="table" value="instructors">
+            
+            <div class="form-group">
+                <label for="instr_name">Full Name:</label>
+                <input type="text" id="instr_name" name="name" placeholder="Dr. Smith" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="instr_email">Email:</label>
+                <input type="email" id="instr_email" name="email" placeholder="smith@university.edu" required>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit">Add Instructor</button>
+                <button type="reset">Clear</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Add Course Form -->
+    <div id="course" class="form-section">
+        <h3>Add New Course</h3>
+        <form action="../backend/insert.php" method="post">
+            <input type="hidden" name="table" value="courses">
+            
+            <div class="form-group">
+                <label for="courseName">Course Name:</label>
+                <input type="text" id="courseName" name="courseName" placeholder="Database Systems" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="instructorID">Instructor ID:</label>
+                <input type="number" id="instructorID" name="instructorID" placeholder="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" placeholder="Course description..." rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="credits">Credits:</label>
+                <input type="number" id="credits" name="credits" value="3" min="1" max="4">
+            </div>
+            
+            <div class="button-group">
+                <button type="submit">Add Course</button>
+                <button type="reset">Clear</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Add Enrollment Form -->
+    <div id="enrollment" class="form-section">
+        <h3>Add New Enrollment</h3>
+        <form action="../backend/insert.php" method="post">
+            <input type="hidden" name="table" value="enrollments">
+            
+            <div class="form-group">
+                <label for="studentID">Student ID:</label>
+                <input type="number" id="studentID" name="studentID" placeholder="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="courseID">Course ID:</label>
+                <input type="number" id="courseID" name="courseID" placeholder="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="enrollmentDate">Enrollment Date:</label>
+                <input type="date" id="enrollmentDate" name="enrollmentDate" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="grade">Grade:</label>
+                <select id="grade" name="grade">
+                    <option value="">-- Select Grade --</option>
+                    <option value="A+">A+ (Excellent)</option>
+                    <option value="A">A (Very Good)</option>
+                    <option value="A-">A- (Very Good)</option>
+                    <option value="B+">B+ (Good)</option>
+                    <option value="B">B (Good)</option>
+                    <option value="B-">B- (Good)</option>
+                    <option value="C+">C+ (Satisfactory)</option>
+                    <option value="C">C (Satisfactory)</option>
+                    <option value="C-">C- (Satisfactory)</option>
+                    <option value="D+">D+ (Passing)</option>
+                    <option value="D">D (Passing)</option>
+                    <option value="F">F (Failing)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select id="status" name="status">
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                    <option value="dropped">Dropped</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit">Add Enrollment</button>
+                <button type="reset">Clear</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all sections
+    const sections = document.querySelectorAll('.form-section');
+    sections.forEach(section => section.classList.remove('active'));
+    
+    // Remove active class from all buttons
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(button => button.classList.remove('active'));
+    
+    // Show selected section
+    document.getElementById(tabName).classList.add('active');
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
