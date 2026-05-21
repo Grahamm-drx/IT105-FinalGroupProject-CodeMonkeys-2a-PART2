@@ -71,18 +71,12 @@ CREATE TABLE enrollments (
 -- 6. AUDIT LOGS (for tracking all DML operations)
 CREATE TABLE audit_logs (
     logID INT AUTO_INCREMENT PRIMARY KEY,
-    action VARCHAR(50) NOT NULL,
-    tableName VARCHAR(50) NOT NULL,
-    row_id INT NULL,
+    action VARCHAR(20),
+    tableName VARCHAR(50),
+    row_id INT,
     old_value JSON NULL,
     new_value JSON NULL,
-    actionTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    userID INT NULL,
-    INDEX idx_action (action),
-    INDEX idx_tableName (tableName),
-    INDEX idx_actionTime (actionTime),
-    INDEX idx_userID (userID),
-    INDEX idx_row_id (row_id)
+    actionTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 7. GRADES_LOG (for tracking grade changes - transaction example)
