@@ -1,105 +1,125 @@
-USE student_management_systemDB;
-
 DELIMITER $$
 
--- === AUDIT TRIGGERS ===
--- These triggers demonstrate how database operations can be automatically logged
-
--- Audit trigger for INSERT on enrollments
-CREATE TRIGGER trg_enrollment_audit_insert
-AFTER INSERT ON enrollments
+-- ==================== STUDENTS ====================
+CREATE TRIGGER trg_students_audit_insert
+AFTER INSERT ON students
 FOR EACH ROW
 BEGIN
-    INSERT INTO audit_logs (action, tableName, details)
-    VALUES ('INSERT', 'enrollments', CONCAT('Student ID: ', NEW.studentID, ', Course ID: ', NEW.courseID));
+    INSERT INTO audit_logs (action, tableName, row_id, new_value)
+    VALUES ('INSERT', 'students', NEW.studentID,
+            JSON_OBJECT('studentID', NEW.studentID, 'firstName', NEW.firstName,
+                        'lastName', NEW.lastName, 'email', NEW.email));
 END$$
 
--- Audit trigger for UPDATE on enrollments
-CREATE TRIGGER trg_enrollment_audit_update
-AFTER UPDATE ON enrollments
+CREATE TRIGGER trg_students_audit_update
+AFTER UPDATE ON students
 FOR EACH ROW
 BEGIN
-    INSERT INTO audit_logs (action, tableName, details)
-    VALUES ('UPDATE', 'enrollments', CONCAT('Enrollment ID: ', NEW.enrollment_id, ', Grade: ', NEW.grade));
+    INSERT INTO audit_logs (action, tableName, row_id, old_value, new_value)
+    VALUES ('UPDATE', 'students', NEW.studentID,
+            JSON_OBJECT('firstName', OLD.firstName, 'lastName', OLD.lastName, 'email', OLD.email),
+            JSON_OBJECT('firstName', NEW.firstName, 'lastName', NEW.lastName, 'email', NEW.email));
 END$$
 
--- Audit trigger for DELETE from enrollments
-CREATE TRIGGER trg_enrollment_audit_delete
-AFTER DELETE ON enrollments
-FOR EACH ROW
-BEGIN
-    INSERT INTO audit_logs (action, tableName, details)
-    VALUES ('DELETE', 'enrollments', CONCAT('Enrollment ID: ', OLD.enrollment_id, ' deleted'));
-END$$
-
--- Audit trigger for DELETE on students
--- When a student is deleted, related enrollments (if any) may be deleted via FK cascade.
--- This trigger ensures we always get an audit row for the student DELETE itself.
-CREATE TRIGGER trg_student_audit_delete
+CREATE TRIGGER trg_students_audit_delete
 AFTER DELETE ON students
 FOR EACH ROW
 BEGIN
-    INSERT INTO audit_logs (action, tableName, details)
-    VALUES ('DELETE', 'students', CONCAT('Student ID: ', OLD.studentID, ', Name: ', OLD.firstName, ' ', OLD.lastName));
+    INSERT INTO audit_logs (action, tableName, row_id, old_value)
+    VALUES ('DELETE', 'students', OLD.studentID,
+            JSON_OBJECT('studentID', OLD.studentID, 'firstName', OLD.firstName,
+                        'lastName', OLD.lastName, 'email', OLD.email));
 END$$
 
-
--- === VALIDATION TRIGGERS ===
--- These trigger perform data validation before insertion
-
--- Validation trigger: prevent invalid grades
-CREATE TRIGGER trg_validate_grade_on_insert
-BEFORE INSERT ON enrollments
+-- ==================== INSTRUCTORS ====================
+CREATE TRIGGER trg_instructors_audit_insert
+AFTER INSERT ON instructors
 FOR EACH ROW
 BEGIN
-    DECLARE valid_grades VARCHAR(100);
-    SET valid_grades = 'A+,A,A-,B+,B,B-,C+,C,C-,D+,D,F';
-    
-    -- If grade is provided and not in valid list, set to NULL
-    IF NEW.grade IS NOT NULL AND FIND_IN_SET(NEW.grade, valid_grades) = 0 THEN
-        SET NEW.grade = NULL;
-    END IF;
+    INSERT INTO audit_logs (action, tableName, row_id, new_value)
+    VALUES ('INSERT', 'instructors', NEW.instructorID,
+            JSON_OBJECT('instructorID', NEW.instructorID, 'name', NEW.name, 'email', NEW.email));
 END$$
 
--- Validation trigger: prevent future enrollment dates
-CREATE TRIGGER trg_validate_enrollment_date
-BEFORE INSERT ON enrollments
+CREATE TRIGGER trg_instructors_audit_update
+AFTER UPDATE ON instructors
 FOR EACH ROW
 BEGIN
-    IF NEW.enrollmentDate > CURDATE() THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Enrollment date cannot be in the future';
-    END IF;
+    INSERT INTO audit_logs (action, tableName, row_id, old_value, new_value)
+    VALUES ('UPDATE', 'instructors', NEW.instructorID,
+            JSON_OBJECT('name', OLD.name, 'email', OLD.email),
+            JSON_OBJECT('name', NEW.name, 'email', NEW.email));
 END$$
 
--- === CONSTRAINT TRIGGERS ===
--- Prevent enrollment of same student to same course twice
-
-CREATE TRIGGER trg_prevent_duplicate_enrollment
-BEFORE INSERT ON enrollments
+CREATE TRIGGER trg_instructors_audit_delete
+AFTER DELETE ON instructors
 FOR EACH ROW
 BEGIN
-    IF EXISTS (SELECT 1 FROM enrollments 
-               WHERE studentID = NEW.studentID 
-               AND courseID = NEW.courseID) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Student is already enrolled in this course';
-    END IF;
+    INSERT INTO audit_logs (action, tableName, row_id, old_value)
+    VALUES ('DELETE', 'instructors', OLD.instructorID,
+            JSON_OBJECT('instructorID', OLD.instructorID, 'name', OLD.name, 'email', OLD.email));
 END$$
 
--- Update timestamp on student modifications
-CREATE TRIGGER trg_update_student_timestamp
-BEFORE UPDATE ON students
+-- ==================== COURSES ====================
+CREATE TRIGGER trg_courses_audit_insert
+AFTER INSERT ON courses
 FOR EACH ROW
 BEGIN
-    SET NEW.created_at = NOW();
+    INSERT INTO audit_logs (action, tableName, row_id, new_value)
+    VALUES ('INSERT', 'courses', NEW.courseID,
+            JSON_OBJECT('courseID', NEW.courseID, 'courseName', NEW.courseName,
+                        'instructorID', NEW.instructorID, 'credits', NEW.credits));
 END$$
 
--- Cascade: Auto-log when course is deleted
-CREATE TRIGGER trg_log_course_deletion
-BEFORE DELETE ON courses
+CREATE TRIGGER trg_courses_audit_update
+AFTER UPDATE ON courses
 FOR EACH ROW
 BEGIN
-    INSERT INTO audit_logs (action, tableName, details)
-    VALUES ('DELETE', 'courses', CONCAT('Course: ', OLD.courseName, ' (ID: ', OLD.courseID, ')'));
+    INSERT INTO audit_logs (action, tableName, row_id, old_value, new_value)
+    VALUES ('UPDATE', 'courses', NEW.courseID,
+            JSON_OBJECT('courseName', OLD.courseName, 'instructorID', OLD.instructorID, 'credits', OLD.credits),
+            JSON_OBJECT('courseName', NEW.courseName, 'instructorID', NEW.instructorID, 'credits', NEW.credits));
+END$$
+
+CREATE TRIGGER trg_courses_audit_delete
+AFTER DELETE ON courses
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_logs (action, tableName, row_id, old_value)
+    VALUES ('DELETE', 'courses', OLD.courseID,
+            JSON_OBJECT('courseID', OLD.courseID, 'courseName', OLD.courseName,
+                        'instructorID', OLD.instructorID, 'credits', OLD.credits));
+END$$
+
+-- ==================== ENROLLMENTS ====================
+CREATE TRIGGER trg_enrollments_audit_insert
+AFTER INSERT ON enrollments
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_logs (action, tableName, row_id, new_value)
+    VALUES ('INSERT', 'enrollments', NEW.enrollment_id,
+            JSON_OBJECT('enrollment_id', NEW.enrollment_id, 'studentID', NEW.studentID,
+                        'courseID', NEW.courseID, 'grade', NEW.grade, 'status', NEW.status));
+END$$
+
+CREATE TRIGGER trg_enrollments_audit_update
+AFTER UPDATE ON enrollments
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_logs (action, tableName, row_id, old_value, new_value)
+    VALUES ('UPDATE', 'enrollments', NEW.enrollment_id,
+            JSON_OBJECT('grade', OLD.grade, 'status', OLD.status),
+            JSON_OBJECT('grade', NEW.grade, 'status', NEW.status));
+END$$
+
+CREATE TRIGGER trg_enrollments_audit_delete
+AFTER DELETE ON enrollments
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_logs (action, tableName, row_id, old_value)
+    VALUES ('DELETE', 'enrollments', OLD.enrollment_id,
+            JSON_OBJECT('enrollment_id', OLD.enrollment_id, 'studentID', OLD.studentID,
+                        'courseID', OLD.courseID, 'grade', OLD.grade));
 END$$
 
 DELIMITER ;
