@@ -29,30 +29,27 @@ $idCols = [
 $idCol = $idCols[$table];
 
 try {
-
     // If deleting a student, delete related enrollments first
     if ($table === 'students') {
-
-        $deleteEnrollments = $conn->prepare(
-            "DELETE FROM enrollments WHERE studentID = ?"
-        );
-
+        $deleteEnrollments = $conn->prepare("DELETE FROM enrollments WHERE studentID = ?");
         $deleteEnrollments->bind_param('i', $id);
         $deleteEnrollments->execute();
     }
 
-    // Now delete the main record
+    // Delete the main record
     $sql = "DELETE FROM $table WHERE $idCol = ?";
     $stmt = $conn->prepare($sql);
-
     $stmt->bind_param('i', $id);
     $stmt->execute();
 
-    header('Location: ../frontend/dashboard.php?msg=Record deleted');
+    // CRITICAL: Force fresh load with timestamp AND keep the same view (students)
+    $timestamp = time();
+    $view = ($table === 'enrollments') ? 'enrollments' : 'students';
+    header("Location: ../frontend/dashboard.php?view=$view&msg=Record+deleted&_=$timestamp");
 
 } catch (mysqli_sql_exception $e) {
-
-    header('Location: ../frontend/dashboard.php?msg=' . urlencode($e->getMessage()));
+    $timestamp = time();
+    header("Location: ../frontend/dashboard.php?msg=" . urlencode($e->getMessage()) . "&_=$timestamp");
 }
 
 exit();
